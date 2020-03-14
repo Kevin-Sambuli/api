@@ -2,22 +2,28 @@ from app import db
 import requests
 from model.forex import Forex
 
-def alpha_request():
-   r= requests.get('http://tech-feedbacks-api.herokuapp.com/feedback')
-   print(r)
+my_api_key = 'OBSQOG0772UWM221'
 
-alpha_request()
+def alpha_request(from_, to_):
+    r = requests.get(f'https://www.alphavantage.co/query?function=FX_INTRADAY&from_symbol={from_}&to_symbol={to_}&interval=1min&apikey={my_api_key}')
+    k= list(dict(r.json()[ 'Time Series FX (1min)']).keys())[0]
+    l = r.json()['Time Series FX (1min)'][k]
 
-def alpha_save(to, from_, high, low,close,date_):
+    data = {
+        "from":from_,
+        "to":to_,
+        "intraday": l,
+        "date":k
+    }
+    return data
+
+def alpha_save(from_, to_):
     ''' call this function to save auto_save dta to Forex table'''
+    data = alpha_request(from_,to_)
+    forex =Forex(to=data['to'], from_=data['from'], high=data['intraday']['2. high'], low=data['intraday']['3. low'],
+                close=data['intraday']['4. close'],datetime=data['date'])
 
-    data_from_api=Forex(to=to,from_=from_, high=high, low=low, close=close, datetime=date_)
-
-    db.session.add(data_from_api)
+    db.session.add(forex)
     db.session.commit()
 
-#
-# alpha_save(to="KES", from_="USD", high=158.9500, low=158.9500,close=158.9500, date_="2020-03-13 16:00:00")
-
-
-
+alpha_save('GBP', 'KES')

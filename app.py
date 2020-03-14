@@ -15,7 +15,7 @@ def create():
 # importing db
 from model.forex import Forex
 
-@app.route("/")
+@app.route("/exchangerate", methods=['GET', git 'POST'])
 def home():
 
     return "home"
